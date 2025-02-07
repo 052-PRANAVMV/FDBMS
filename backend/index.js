@@ -36,11 +36,11 @@
     app.use('/api/admin', adminRoutes);
     app.use('/api/', FacultyRoutes);
 
-    app.use(express.static(path.join(__dirname, "frontend", "dist")));
+    app.use(express.static(path.join(__dirname, "frontend", "build")));
 
     // Fallback to index.html for other routes (SPA behavior)
     app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "dist", "public/index.html"));
+    res.sendFile(path.join(__dirname, "frontend", "build", "public/index.html"));
     });
 
     app.listen(5000, () => {
