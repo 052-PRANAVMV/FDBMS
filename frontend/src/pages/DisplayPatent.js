@@ -11,7 +11,7 @@ function DisplayPatents() {
     const [filteredPatents, setFilteredPatents] = useState(patents);
 
     const handleViewPDF = (fileId) => {
-        const url = `${process.env.REACT_APP_API_URL}/uploads/${fileId}`;
+        const url = `/uploads/${fileId}`;
         window.open(url, '_blank');
     };
 

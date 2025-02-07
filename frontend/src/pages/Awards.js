@@ -23,7 +23,7 @@ function Addaward() {
   const handleDelete = async (awardId) => {
     setStatus({ loading: true, success: false, error: null });
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/api/delawards`, {
+      const response = await axios.delete(`/api/delawards`, {
         data: {
           empId: currentUser.data.empId,
           id: awardId,
@@ -47,7 +47,7 @@ function Addaward() {
             <Carousel>
               {awards.map((award, index) => (
                 <Carousel.Item key={award._id} interval={1000}>
-                  <Image src={`${process.env.REACT_APP_API_URL}/uploads/${award.fileId}`} rounded />
+                  <Image src={`/uploads/${award.fileId}`} rounded />
                   <Carousel.Caption>
                     <h3>{award.name}</h3>
                     <p>{award.date}</p>

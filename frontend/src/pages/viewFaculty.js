@@ -22,7 +22,7 @@ const View = () => {
     useEffect(() => {
         const fetchFaculty = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/facultydetails`);
+                const response = await axios.get(`/api/facultydetails`);
                 if (response.status === 200) {
                     setFaculty(response.data);
                     setFilteredFaculty(response.data);
@@ -38,7 +38,7 @@ const View = () => {
     const handleDelete = async (empid) => {
         try {
             setStatus({ loading: true, success: false, error: null });
-            const response = await axios.delete(`${process.env.REACT_APP_API_URL}/api/delfac`, {
+            const response = await axios.delete(`/api/delfac`, {
                 data: { facid: empid }
             });
             if (response.status === 200) {
@@ -70,7 +70,7 @@ const View = () => {
 
     const handleViewDetails = async (empid) => {
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/facultyview`, { facid: empid });
+            const response = await axios.post(`/api/facultyview`, { facid: empid });
             if (response.status === 200) {
                 dispatch(signInSuccess(response));
                 navigate('/dashboardview');

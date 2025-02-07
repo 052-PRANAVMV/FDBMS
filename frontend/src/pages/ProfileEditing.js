@@ -18,7 +18,7 @@ function ProfileEditing() {
         address: currentUser?.data?.address || '',
     });
     const [resume, setResume] = useState('');
-    const [profileImage, setProfileImage] = useState(`${process.env.REACT_APP_API_URL}/${currentUser?.data?.photoId}`);
+    const [profileImage, setProfileImage] = useState(`/${currentUser?.data?.photoId}`);
 
     useEffect(() => {
         if (currentUser) {
@@ -29,7 +29,7 @@ function ProfileEditing() {
                 phone: currentUser.data.phone,
                 address: currentUser.data.address,
             });
-            setProfileImage(`${process.env.REACT_APP_API_URL}/${currentUser.data.photoId}`);
+            setProfileImage(`/${currentUser.data.photoId}`);
         }
     }, [currentUser]);
 
@@ -57,7 +57,7 @@ function ProfileEditing() {
 
             if (resume) updatedData.resume = resume; // Append resume if uploaded
 
-            const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/facultyedit`, updatedData);
+            const response = await axios.put(`/api/facultyedit`, updatedData);
             dispatch(signInSuccess(response));
             console.log("Profile updated successfully:", response.data);
             setEditProfile(false); // Exit edit mode after saving
@@ -74,14 +74,14 @@ function ProfileEditing() {
             formData.append('empId', profileInfo.empId); // Append empId to formData
 
             try {
-                const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/updateProfileImage`, formData, {
+                const response = await axios.put(`/api/updateProfileImage`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
 
                 // Update the profile image state with the new image path
-                setProfileImage(`${process.env.REACT_APP_API_URL}/${response.data.photoId}`);
+                setProfileImage(`/${response.data.photoId}`);
                 console.log("Profile image updated successfully:", response.data);
             } catch (error) {
                 console.error("Error updating profile image:", error.response ? error.response.data : error.message);
@@ -98,7 +98,7 @@ function ProfileEditing() {
             formData.append('empId' , profileInfo.empId);
 
             try {
-                const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/uploadResume` , formData , {
+                const response = await axios.put(`/api/uploadResume` , formData , {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },

@@ -23,7 +23,7 @@ const Certificates = () => {
   const handleDelete = async (certId) => {
     setStatus({ loading: true, success: false, error: null });
     try {
-      const response = await axios.delete(`${process.env.REACT_APP_API_URL}/api/delcertificates`, {
+      const response = await axios.delete(`/api/delcertificates`, {
         data: {
           empId: currentUser?.data?.empId, // Use optional chaining
           id: certId,
@@ -56,7 +56,7 @@ const Certificates = () => {
             <Accordion.Body>
               <Container>
                 <Row>
-                  <Col><Image src={`${process.env.REACT_APP_API_URL}/uploads/${cert.fileId}`} rounded /></Col>
+                  <Col><Image src={`/uploads/${cert.fileId}`} rounded /></Col>
                   <Col><p>{cert.duration}</p></Col>
                   <Col><p>{cert.description}</p></Col>
                   <Col>

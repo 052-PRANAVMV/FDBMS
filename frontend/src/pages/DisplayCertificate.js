@@ -48,7 +48,7 @@ const DisplayCertificates = () => {
                         <Accordion.Body>
                             <Container>
                                 <Row>
-                                    <Col><Image src={`${process.env.REACT_APP_API_URL}/uploads/${cert.fileId}`} rounded /></Col>
+                                    <Col><Image src={`/uploads/${cert.fileId}`} rounded /></Col>
                                     <Col><p>{cert.duration}</p></Col>
                                     <Col><p>{cert.description}</p></Col>
                                 </Row>

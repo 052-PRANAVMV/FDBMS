@@ -26,7 +26,7 @@ const SubjectForm = () => {
     e.preventDefault();
     console.log('Form Data before API call:', formData);  // Debug statement
 
-    axios.post(`${process.env.REACT_APP_API_URL}/api/update-subject-percentage`, {
+    axios.post(`/api/update-subject-percentage`, {
       empId: currentUser.data.empId,
       subjectName: formData.title,
       courseCode: formData.subjectCode,

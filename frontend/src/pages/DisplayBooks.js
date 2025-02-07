@@ -72,7 +72,7 @@ const DisplayBooks = () => {
                                 <Button 
                                     variant="primary" 
                                     className="text-center custom-button"
-                                    onClick={() => window.open(`${process.env.REACT_APP_API_URL}/uploads/${book.fileId}`, '_blank')}
+                                    onClick={() => window.open(`/uploads/${book.fileId}`, '_blank')}
                                 >
                                     View PDF
                                 </Button>

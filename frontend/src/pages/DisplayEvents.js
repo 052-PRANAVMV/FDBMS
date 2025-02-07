@@ -51,7 +51,7 @@ function Eventpage() {
             <Row className='mt-5 mb-5 slide-in-left' key={index}>
               <Col xs={12} md={4} className='d-flex justify-content-center'>
                 <Image
-                  src={`${process.env.REACT_APP_API_URL}/uploads/${event.image}`}
+                  src={`/uploads/${event.image}`}
                   style={{ borderRadius: '20px', maxWidth: '100%', height: 'auto' }}
                   alt={event.eventname}
                 />
