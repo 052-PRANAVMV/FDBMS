@@ -40,7 +40,7 @@
 
     // Fallback to index.html for other routes (SPA behavior)
     app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "build", "public/index.html"));
+    res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
     });
 
     app.listen(5000, () => {
