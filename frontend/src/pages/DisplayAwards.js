@@ -50,7 +50,13 @@ function DisplayAward() {
                         <Accordion.Body>
                             <Container>
                                 <Row>
-                                    <Col><Image src={`/uploads/${award.fileId}`} rounded/></Col>
+                                    <Col>
+                                        <Image 
+                                            src={`/uploads/${award.fileId}`} 
+                                            rounded 
+                                            style={{ width: '10cm', height: '10cm', objectFit: 'cover' }} 
+                                        />
+                                    </Col>
                                     <Col><p>{award.date}</p></Col>
                                     <Col><p>{award.organization}</p></Col>
                                     <Col><p>{award.issuer}</p></Col>

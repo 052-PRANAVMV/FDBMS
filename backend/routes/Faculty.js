@@ -358,9 +358,13 @@ router.post('/faculty/add-publication', upload.single('file'), async (req, res) 
     const { empId, title, category, type, date, description } = req.body;
     const file = req.file;
 
+    if (!file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
     const faculty = await Faculty.findOne({ empId });
     if (!faculty) {
-      return res.status(404).send('Faculty not found');
+      return res.status(404).json({ message: "Faculty not found" });
     }
 
     const newPublication = {
@@ -377,7 +381,8 @@ router.post('/faculty/add-publication', upload.single('file'), async (req, res) 
 
     res.status(200).json(faculty); // Send back the updated faculty record
   } catch (error) {
-    res.status(500).send('Server error');
+    console.error('Error adding publication:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

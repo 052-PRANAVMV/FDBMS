@@ -47,7 +47,7 @@ function Addaward() {
             <Carousel>
               {awards.map((award, index) => (
                 <Carousel.Item key={award._id} interval={1000}>
-                  <Image src={`/uploads/${award.fileId}`} rounded />
+                  <Image src={`/uploads/${award.fileId}`} style={{width:'10cm',height:'10cm',objectFit:'cover'}} />
                   <Carousel.Caption>
                     <h3>{award.name}</h3>
                     <p>{award.date}</p>
