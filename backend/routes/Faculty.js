@@ -55,7 +55,7 @@ router.post('/register', upload.single('photoId'), async (req, res) => {
     await newFaculty.save();
     res.status(201).send('Faculty registered');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering faculty:', error);
     res.status(500).send('Error registering faculty');
   }
 });

@@ -155,7 +155,7 @@ const FacultyRegister = () => {
           setFile(null);
         }
       } catch (error) {
-        console.error(error);
+        console.error('Error submitting form:', error);
         setErrors({ submit: 'Error submitting form. Please try again.' });
       }
     }
