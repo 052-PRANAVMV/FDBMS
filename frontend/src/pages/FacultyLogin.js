@@ -55,7 +55,7 @@ function FacultyLoginForm() {
     }
     if (!data.password || data.password.length < 4) {
       errors.password = "Password length must be at least 4 characters";
-    } else if (!/^[a-zA-Z*#0-9]+$/.test(data.password)) {
+    } else if (!/^[a-zA-Z*#0-9@]+$/.test(data.password)) {
       errors.password = "Invalid password";
     }
     return errors;
