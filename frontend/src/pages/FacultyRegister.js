@@ -103,7 +103,7 @@ const FacultyRegister = () => {
     // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (!/^[a-zA-Z*#0-9]+$/.test(formData.password)) {
+    } else if (!/^[a-zA-Z*#0-9@]+$/.test(formData.password)) {
       newErrors.password = 'Password must be at least 8 characters long, contain an uppercase letter, a lowercase letter, and a digit';
     }
 
