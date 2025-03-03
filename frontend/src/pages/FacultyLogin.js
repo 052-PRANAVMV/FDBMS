@@ -53,8 +53,8 @@ function FacultyLoginForm() {
     if (!/^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/.test(data.email)) {
       errors.email = "Invalid email ID";
     }
-    if (!data.password || data.password.length < 8) {
-      errors.password = "Password length must be at least 8 characters";
+    if (!data.password || data.password.length < 4) {
+      errors.password = "Password length must be at least 4 characters";
     } else if (!/^[a-zA-Z*#0-9]+$/.test(data.password)) {
       errors.password = "Invalid password";
     }
