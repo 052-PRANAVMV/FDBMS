@@ -3,10 +3,13 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const upload  = require('../config/multerConfig');
-
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 console.log('Importing upload:', upload);
 
 const Faculty = require('../models/Faculty');
+const { log } = require('console');
 
 
 
@@ -181,7 +184,8 @@ router.put('/facultyedit', async (req, res) => {
     email,
     phone,
     address,
-    photoId, // Ensure to handle this if needed
+    photoId,
+    linkedinProfile, // Ensure to handle this if needed
     resume,
   } = req.body;
 
@@ -195,7 +199,8 @@ router.put('/facultyedit', async (req, res) => {
         email,
         phone,
         address,
-        photoId, // If you are handling profile image update
+        photoId,
+        linkedinProfile, // If you are handling profile image update
         resume, // Handle resume if needed
       },
       { new: true, runValidators: true }
@@ -220,22 +225,23 @@ router.put('/facultyedit', async (req, res) => {
 
 router.put('/updateProfileImage', upload.single('profileImage'), async (req, res) => {
   try {
-      const { empId } = req.body; // Get empId from the request body
+      const { empId } = req.body;
 
-      // Find the faculty member by empId
       const faculty = await Faculty.findOne({ empId });
 
       if (!faculty) {
           return res.status(404).json({ message: "Faculty not found" });
       }
 
-      // Update the photoId field with the new image path
-      faculty.photoId = req.file.path; // req.file contains the uploaded file details
+      // Store only the filename instead of full path
+      faculty.photoId = req.file.filename; // Changed from req.file.path to req.file.filename
 
-      // Save the updated faculty member
       await faculty.save();
 
-      res.status(200).json({ message: "Profile image updated successfully", photoId: faculty.photoId });
+      res.status(200).json({ 
+          message: "Profile image updated successfully", 
+          photoId: req.file.filename  // Return filename instead of full path
+      });
   } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Error updating profile image", error: error.message });
@@ -247,32 +253,23 @@ router.put('/updateProfileImage', upload.single('profileImage'), async (req, res
 
 router.put('/uploadResume', upload.single('resume'), async (req, res) => {
   try {
-      const { empId } = req.body;
+    const { empId } = req.body;
+    const faculty = await Faculty.findOne({ empId });
 
-      // Check if a resume file is included in the request
-      if (!req.file) {
-          return res.status(400).json({ message: "No resume file uploaded" });
-      }
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
 
-      // Find the faculty member by empId
-      const faculty = await Faculty.findOne({ empId });
-      if (!faculty) {
-          return res.status(404).json({ message: "Faculty not found" });
-      }
+    faculty.resume = req.file.filename;
+    await faculty.save();
 
-      // Update the faculty record with the new resume path
-      faculty.resumeId = req.file.path;
-
-      // Save the updated faculty data
-      await faculty.save();
-
-      res.status(200).json({
-          message: "Resume uploaded successfully",
-          resumeId: faculty.resumeId
-      });
+    res.status(200).json({ 
+      message: "Resume uploaded successfully",
+      resume: req.file.filename 
+    });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Error uploading resume", error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Error uploading resume" });
   }
 });
 
@@ -447,7 +444,7 @@ router.post('/uploadcertificate', upload.single('upload'), async (req, res) => {
       faculty.certifications.push(newCertificate);
       await faculty.save();
 
-      res.status(200).send('Certificate added successfully.');
+      res.status(200).send(faculty);
   } catch (error) {
       res.status(500).send('Server error.');
   }
@@ -926,5 +923,181 @@ router.post('/faculty/:id/consultancy', upload.single('pdf'), async (req, res) =
     }
   });
   
-  
+
+// Route to generate PDF report
+
+router.get("/generateReport/:empId", async (req, res) => {
+  const empId = req.params.empId;
+  console.log("Requested Employee ID:", empId);
+
+  try {
+      const faculty = await Faculty.findOne({ empId });
+      if (!faculty) {
+          return res.status(404).json({ message: "Faculty not found" });
+      }
+
+      // ✅ Ensure uploads directory exists
+      const uploadsDir = path.join(__dirname, "../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+          console.log("✅ Uploads directory created:", uploadsDir);
+      }
+
+      // ✅ Define file path
+      const filename = `Report_${faculty.name.replace(/\s+/g, "_")}.pdf`;
+      const filePath = path.join(uploadsDir, filename);
+      console.log("✅ File will be saved at:", filePath);
+
+      // ✅ Create PDF document
+      const doc = new PDFDocument();
+      const stream = fs.createWriteStream(filePath);
+      doc.pipe(stream);
+      
+      // ✅ Profile Picture (Move slightly down)
+      const imagePath = faculty.photoId ? path.join(__dirname, "../uploads", faculty.photoId) : null;
+      
+      if (imagePath && fs.existsSync(imagePath)) {
+          doc.image(imagePath, doc.page.width - 120, 80, { width: 100, height: 100 });
+      }
+
+      const publications = faculty.publications || [];
+const fundedProjectProposals = faculty.fundedProjectProposals || [];
+const projectsHandled = faculty.projectsHandled || [];
+const eventsHandled = faculty.eventsHandled || [];
+const subjectsHandled = faculty.subjectsHandled || [];
+const books = faculty.books || [];
+const certifications = faculty.certifications || [];
+const awards = faculty.awards || [];
+const consultancies = faculty.consultancies || [];
+      
+      // ✅ Title
+      doc.fontSize(25).text("Faculty Report", { align: "center" }).moveDown(1.5);
+      
+      // ✅ Faculty Basic Information
+      doc.x = 50;
+      doc.fontSize(18).text(`Name: ${faculty.name}`).moveDown();
+      doc.text(`Employee ID: ${faculty.empId}`).moveDown();
+      doc.text(`Date of Birth: ${faculty.dob?.toDateString() || "N/A"}`).moveDown();
+      doc.text(`Experience: ${faculty.experiance || "N/A"}`).moveDown();
+      doc.text(`Email: ${faculty.email}`).moveDown();
+      doc.text(`Phone: ${faculty.phone}`).moveDown();
+      doc.text(`Address: ${faculty.address || "N/A"}`).moveDown();
+      doc.text(`LinkedIn: ${faculty.linkedinProfile || "N/A"}`).moveDown(2);
+      
+      // ✅ Educational Background
+      doc.fontSize(18).text("Educational Background:").moveDown(0.5);
+      doc.fontSize(14).text(faculty.educationalBackground || "N/A").moveDown(1.5);
+      
+      doc.fontSize(18).text("Publications:");
+if (publications.length > 0) {
+    publications.forEach((pub) => {
+        doc.fontSize(14).text(`  Title: ${pub.title}`);
+        doc.fontSize(14).text(`  Type: ${pub.type}`);
+        doc.fontSize(14).text(`  Category: ${pub.category}`);
+        doc.fontSize(14).text(`  Description: ${pub.description}`);
+        doc.moveDown(); // Add space after each publication
+    });
+} else {
+    doc.fontSize(14).text("N/A");
+}
+doc.moveDown();
+
+doc.fontSize(18).text("Funded Project Proposals:");
+fundedProjectProposals.length > 0
+    ? fundedProjectProposals.forEach((prop) => {
+      doc.fontSize(14).text(`  Title: ${prop.title}`);
+      doc.fontSize(14).text(`  Status: ${prop.status}`);
+      doc.fontSize(14).text(`  Date Submitted: ${prop.dateSubmitted}`);
+      doc.fontSize(14).text(`  Date Reviewed: ${prop.dateReviewed}`);
+      doc.fontSize(14).text(`  Description: ${prop.description}`);
+      doc.moveDown();})
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Subjects Handled:");
+subjectsHandled.length > 0
+    ? subjectsHandled.forEach((prop) => {
+      doc.fontSize(14).text(`  Name: ${prop.name}`);
+      doc.fontSize(14).text(`  Course Code: ${prop.coursecode}`);
+      doc.fontSize(14).text(`  Internal Pass Percentages:`);
+      prop.internalPassPercentages.forEach((pass) => {
+          doc.fontSize(14).text(`    - ${pass.examType}: ${pass.percentage}`);
+          doc.moveDown();
+        });
+      doc.moveDown();
+    })
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Projects Handled:");
+projectsHandled.length > 0
+    ? projectsHandled.forEach((proj) => {
+    doc.fontSize(14).text(`  Title: ${proj.title}`)
+    doc.fontSize(14).text(`  Description: ${proj.description}`);
+    doc.fontSize(14).text(`  Date: ${proj.date}`);
+    doc.fontSize(14).text(`  Status: ${proj.status}`);
+    doc.moveDown();}) 
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Events Handled:");
+eventsHandled.length > 0
+    ? eventsHandled.forEach((event) => {
+      doc.fontSize(14).text(`  Name: ${event.name}`)
+      doc.fontSize(14).text(`  Description: ${event.description}`);
+      doc.fontSize(14).text(`  Date: ${event.date}`);
+      doc.fontSize(14).text(`  Image: ${event.image}`);
+      doc.moveDown();})
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Books:");
+books.length > 0
+    ? books.forEach((book) => {
+      doc.fontSize(14).text(`  Title: ${book.title}`);
+      doc.fontSize(14).text(`  Author: ${book.author}`);
+      doc.fontSize(14).text(`  Description: ${book.description}`);
+      doc.fontSize(14).text(`  ISBN: ${book.ISBN}`);
+      doc.moveDown();})
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Certifications:");
+certifications.length > 0
+    ? certifications.forEach((cert) => {doc.fontSize(14).text(`  Name: ${cert.name}`)
+    doc.fontSize(14).text(`  Description: ${cert.description}`);
+    doc.fontSize(14).text(`  Duration: ${cert.duration}`);
+   doc.moveDown();}
+    )
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+
+doc.fontSize(18).text("Awards:");
+awards.length > 0
+    ? awards.forEach((award) =>{ 
+      doc.fontSize(14).text(`  Name: ${award.name}`);
+      doc.fontSize(14).text(`  Issuer: ${award.issuer}`);
+      doc.fontSize(14).text(`  Date: ${award.date}`);
+      doc.moveDown();
+    })
+    : doc.fontSize(14).text("N/A");
+doc.moveDown();
+      
+      // ✅ End document
+      doc.end();
+      
+      // ✅ Ensure response is sent after file creation
+      stream.on("finish", () => {
+          console.log("✅ PDF generated successfully:", filePath);
+          res.json({ filePath: `/uploads/${filename}` });
+      });
+      
+  } catch (error) {
+      console.error("❌ Error generating report:", error);
+      res.status(500).json({ message: "Error generating report" });
+  }
+});
+
+
+
 module.exports = router;

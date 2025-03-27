@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import '../styles/fundedProject.css';  // Rename App.css to fundedProject.css
 import { useSelector } from 'react-redux';
+import { MdPictureAsPdf } from 'react-icons/md';
+import { Button } from 'react-bootstrap';
 
 function FundedProjectsDisplay() {
     const { currentUser } = useSelector(state => state.user);
@@ -27,9 +29,13 @@ function FundedProjectsDisplay() {
         setFilteredProjects(filtered);
     };
 
+    const handleViewPDF = (fileId) => {
+        window.open(`/uploads/${fileId}`, '_blank');
+    };
+
     return (
         <div className="FundedProjects">
-            <h1>Projects</h1>
+            <h1>Funded Projects Proposals</h1>
             <div className="search-bar">
                 <input
                     type="text"
@@ -41,14 +47,19 @@ function FundedProjectsDisplay() {
             <div className="projects">
                 {filteredProjects.map((project) => (
                     <div className="project" key={project._id}>
-                        <div className="image" id={`image${project.fileId}`}>
-                            <img src={`/uploads/${project.fileId}`} alt={project.title} />
-                        </div>
                         <div className="details">
                             <p><strong>{project.title}</strong></p>
                             <p>{project.status}</p>
                             <p>Date Submitted: {project.dateSubmitted}</p>
                             <p>{project.description}</p>
+                            <Button 
+                                variant="outline-primary" 
+                                onClick={() => handleViewPDF(project.fileId)}
+                                className="view-pdf-btn"
+                                style={{width: '200px', marginBottom: '10px'}}
+                            >
+                                <MdPictureAsPdf /> View PDF
+                            </Button>
                         </div>
                     </div>
                 ))}

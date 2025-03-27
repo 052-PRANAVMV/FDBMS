@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Button, Accordion, Image, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button, Accordion, Alert } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete} from 'react-icons/md';
 import axios from 'axios';
 import { signInSuccess } from '../redux/user/userSlice';
 
 const Certificates = () => {
   const navigate = useNavigate();
-  const { currentUser } = useSelector(state => state.user);
+  const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
-  // Use optional chaining to safely access certificates
   const certificates = currentUser?.data?.certifications || [];
 
   const [status, setStatus] = useState({
@@ -25,18 +24,22 @@ const Certificates = () => {
     try {
       const response = await axios.delete(`/api/delcertificates`, {
         data: {
-          empId: currentUser?.data?.empId, // Use optional chaining
+          empId: currentUser?.data?.empId,
           id: certId,
         },
       });
       if (response.status === 200) {
-        dispatch(signInSuccess(response));
+        dispatch(signInSuccess({ data: response.data }));
         setStatus({ loading: false, success: true, error: null });
       }
     } catch (error) {
-      const errorMessage = error.response && error.response.data ? JSON.stringify(error.response.data) : 'Server error';
+      const errorMessage = error.response?.data?.message || 'Server error';
       setStatus({ loading: false, success: false, error: errorMessage });
     }
+  };
+
+  const handleViewPDF = (fileId) => {
+    window.open(`/uploads/${fileId}`, '_blank');
   };
 
   const handleUploadCertificate = () => {
@@ -51,12 +54,24 @@ const Certificates = () => {
 
       <Accordion>
         {certificates.map((cert, index) => (
-          <Accordion.Item eventKey={index} key={index} className='mt-3 mb-3'>
+          <Accordion.Item eventKey={index} key={cert._id || index} className='mt-3 mb-3'>
             <Accordion.Header>{cert.name}</Accordion.Header>
             <Accordion.Body>
               <Container>
                 <Row>
-                  <Col><Image src={`/uploads/${cert.fileId}`} rounded /></Col>
+                  <Col>
+                    <img 
+                      src={`/uploads/${cert.fileId}`}
+                      alt={cert.name}
+                      style={{ 
+                        maxWidth: '300px', 
+                        width: '100%', 
+                        height: 'auto',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                    />
+                  </Col>
                   <Col><p>{cert.duration}</p></Col>
                   <Col><p>{cert.description}</p></Col>
                   <Col>
@@ -73,7 +88,14 @@ const Certificates = () => {
 
       <Container>
         <Row className="d-flex justify-content-center">
-          <Button className="mt-3 md-4 sm-2" variant='primary' style={{ width: '20%', minWidth: '300px' }} onClick={handleUploadCertificate}>Add a new certificate</Button>
+          <Button 
+            className="mt-3 md-4 sm-2" 
+            variant='primary' 
+            style={{ width: '20%', minWidth: '300px' }} 
+            onClick={handleUploadCertificate}
+          >
+            Add a new certificate
+          </Button>
         </Row>
       </Container>
     </Container>

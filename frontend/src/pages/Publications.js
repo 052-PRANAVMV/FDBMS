@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import '../styles/Publications.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdPictureAsPdf } from 'react-icons/md';
 import axios from 'axios';
 import { signInSuccess } from '../redux/user/userSlice';
-import { Alert } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 
 function Publications() {
   const navigate = useNavigate();
@@ -40,6 +40,10 @@ function Publications() {
     }
   };
 
+  const handleViewPDF = (fileId) => {
+    window.open(`/uploads/${fileId}`, '_blank');
+  };
+
   return (
     <div className="App">
       <h1>Publications</h1>
@@ -51,8 +55,8 @@ function Publications() {
       <div className="publications">
         {publications.map((pub) => (
           <div className="publication" key={pub._id}>
-            <div className="image" id={`image${pub.fileId}`}>
-              <img src={`/uploads/${pub.fileId}`} alt={pub.title} />
+            <div className="document-section">
+              
             </div>
             <div className="description">
               <p><strong>{pub.title}</strong></p>
@@ -60,6 +64,14 @@ function Publications() {
               <p><strong>{pub.type}</strong></p>
               <p>{pub.date}</p>
               <p>{pub.description}</p>
+              <Button 
+                variant="outline-primary" 
+                onClick={() => handleViewPDF(pub.fileId)}
+                className="view-pdf-btn"
+                style={{width: '200px','marginBottom': '10px'}}
+              >
+                <MdPictureAsPdf /> View PDF
+              </Button>
               <button className="custom-button" onClick={() => handleDelete(pub._id)}>
                 <MdDelete />
               </button>

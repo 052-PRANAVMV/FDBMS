@@ -24,7 +24,7 @@ function AdminRegister() {
     
         if (Object.keys(errors).length === 0) {
             try {
-                const response = await axios.post(`/auth/adminregister`, regdata);
+                const response = await axios.post(`/api/admin/auth/adminregister`, regdata);
                 alert(response.data.message || "Successfully registered");
                 console.log(response.data);
     

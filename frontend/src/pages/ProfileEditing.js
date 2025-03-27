@@ -1,267 +1,323 @@
-import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal, Button } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Container, Row, Col, Form, Button, Image, Alert } from 'react-bootstrap';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { signInSuccess } from "../redux/user/userSlice";
+import { useNavigate } from 'react-router-dom';
+import { FaCamera, FaFileUpload } from 'react-icons/fa';
 
 function ProfileEditing() {
     const { currentUser } = useSelector(state => state.user);
     const dispatch = useDispatch();
-    const [editProfile, setEditProfile] = useState(false);
-    const [showModal, setShowModal] = useState(false);
-    const [profileInfo, setProfileInfo] = useState({
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const [formData, setFormData] = useState({
         name: currentUser?.data?.name || '',
         empId: currentUser?.data?.empId || '',
+        designation: currentUser?.data?.designation || '',
+        department: currentUser?.data?.department || '',
+        educationalBackground: currentUser?.data?.educationalBackground || '',
         email: currentUser?.data?.email || '',
         phone: currentUser?.data?.phone || '',
         address: currentUser?.data?.address || '',
+        linkedinProfile: currentUser?.data?.linkedinProfile || ''
     });
-    const [resume, setResume] = useState('');
-    const [profileImage, setProfileImage] = useState(`/${currentUser?.data?.photoId}`);
 
-    useEffect(() => {
-        if (currentUser) {
-            setProfileInfo({
-                name: currentUser.data.name,
-                empId: currentUser.data.empId,
-                email: currentUser.data.email,
-                phone: currentUser.data.phone,
-                address: currentUser.data.address,
-            });
-            setProfileImage(`/${currentUser.data.photoId}`);
-        }
-    }, [currentUser]);
+    const [profileImage, setProfileImage] = useState(
+        currentUser?.data?.photoId ? 
+        `/uploads/${currentUser.data.photoId}` : 
+        '/default-profile.png'
+    );
 
-    const handleProfileInfoChange = (e) => {
-        setProfileInfo({
-            ...profileInfo,
-            [e.target.name]: e.target.value,
+    const handleInputChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
         });
     };
 
-    const handleResumeChange = (e) => {
-        setResume(e.target.files[0]);
+    const handleImageChange = async (e) => {
+            const file = e.target.files[0];
+        if (!file) return;
+
+            const formData = new FormData();
+        formData.append('profileImage', file);
+        formData.append('empId', currentUser.data.empId);
+
+        try {
+            setLoading(true);
+            setError('');
+            const response = await axios.put('/api/updateProfileImage', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            setProfileImage(`/uploads/${response.data.photoId}`);
+            dispatch(signInSuccess({ 
+                data: { ...currentUser.data, photoId: response.data.photoId } 
+            }));
+            setSuccess('Profile picture updated successfully!');
+        } catch (err) {
+            setError('Failed to update profile picture');
+            console.error(err);
+            } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSave = async () => {
-        console.log("Saving profile with data:", profileInfo);
+    const handleResumeUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('resume', file);
+        formData.append('empId', currentUser.data.empId);
+
         try {
-            const updatedData = {
-                empId: profileInfo.empId,
-                name: profileInfo.name,
-                email: profileInfo.email,
-                phone: profileInfo.phone,
-                address: profileInfo.address,
+            setLoading(true);
+            setError('');
+            const response = await axios.put('/api/uploadResume', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            dispatch(signInSuccess({ 
+                data: { 
+                    ...currentUser.data, 
+                    resume: response.data.resume 
+                } 
+            }));
+            setSuccess('Resume uploaded successfully!');
+        } catch (err) {
+            setError('Failed to upload resume');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            setError('');
+            
+            const dataToSubmit = {
+                ...formData,
+                resume: currentUser.data.resume
             };
 
-            if (resume) updatedData.resume = resume; // Append resume if uploaded
-
-            const response = await axios.put(`/api/facultyedit`, updatedData);
+            const response = await axios.put('/api/facultyedit', dataToSubmit);
             dispatch(signInSuccess(response));
-            console.log("Profile updated successfully:", response.data);
-            setEditProfile(false); // Exit edit mode after saving
-        } catch (error) {
-            console.error("Error updating profile:", error.response ? error.response.data : error.message);
-        }
-    };
-
-    const handleImageChange = async (e) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const formData = new FormData();
-            formData.append('profileImage', file); // Append the image file to formData
-            formData.append('empId', profileInfo.empId); // Append empId to formData
-
-            try {
-                const response = await axios.put(`/api/updateProfileImage`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
-
-                // Update the profile image state with the new image path
-                setProfileImage(`/${response.data.photoId}`);
-                console.log("Profile image updated successfully:", response.data);
-            } catch (error) {
-                console.error("Error updating profile image:", error.response ? error.response.data : error.message);
-            } finally {
-                setShowModal(false); // Close modal after image upload
-            }
-        }
-    };
-
-    const handleResumeUpload = async(e) => {
-        if(resume){
-            const formData = new FormData();
-            formData.append('resume' , resume );
-            formData.append('empId' , profileInfo.empId);
-
-            try {
-                const response = await axios.put(`/api/uploadResume` , formData , {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
-
-                console.log('Resume uploaded succesfully:', response.data);
-            } catch (error){
-                console.error("Error uploading Resume :", error.response ? error.response.data : error.message);
-            }
-        } else {
-            console.log("No Resume Selected :")
+            setSuccess('Profile updated successfully!');
+            setTimeout(() => navigate('/profile'), 1500);
+        } catch (err) {
+            setError('Failed to update profile');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="container mt-5 mb-5 profile-container">
-            {/* Profile Section */}
-            <div className="card bg-white profile-card">
-                <div className="row g-0">
-                    <div className="col-md-4 col-sm-12 d-flex justify-content-center align-items-center p-3">
-                        <div className="profile-img-container">
-                            <img
+        <Container className="py-5">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+                {error && <Alert variant="danger">{error}</Alert>}
+                {success && <Alert variant="success">{success}</Alert>}
+                
+                <Form onSubmit={handleSubmit}>
+                    {/* Profile Image Section */}
+                    <div className="text-center mb-4 position-relative">
+                        <Image 
                                 src={profileImage}
-                                alt="Profile"
-                                className="rounded-circle img-fluid profile-img"
-                                style={{ maxWidth: '80px' }}
-                            />
-                            <div
-                                className="edit-overlay"
-                                onClick={() => setShowModal(true)} // Opens the modal on clicking 'Edit'
-                            >
-                                Edit
-                            </div>
+                            roundedCircle 
+                            style={{ 
+                                width: '150px', 
+                                height: '150px', 
+                                objectFit: 'cover',
+                                border: '3px solid #f8f9fa'
+                            }} 
+                        />
+                        <div className="position-absolute bottom-0 end-50 mb-2">
+                            <label className="btn btn-light rounded-circle p-2" style={{ cursor: 'pointer' }}>
+                                <FaCamera />
+                                <input
+                                    type="file"
+                                    className="d-none"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                />
+                            </label>
                         </div>
                     </div>
-                    <div className="col-md-6 col-sm-12 d-flex align-items-center">
-                        <div className="ms-3 w-100">
-                            {editProfile ? (
-                                <>
-                                    <input
+
+                    <Row className="g-3">
+                        {/* Basic Information */}
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Full Name*</Form.Label>
+                                <Form.Control
+                                    required
                                         type="text"
                                         name="name"
-                                        className="form-control mt-2 mb-2"
-                                        value={profileInfo.name}
-                                        onChange={handleProfileInfoChange}
-                                    />
-                                    <input
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Employee ID*</Form.Label>
+                                <Form.Control
+                                    required
                                         type="text"
                                         name="empId"
-                                        className="form-control mb-2"
-                                        value={profileInfo.empId}
-                                        onChange={handleProfileInfoChange}
-                                    />
-                                </>
-                            ) : (
-                                <>
-                                    <h5>{profileInfo.name}</h5>
-                                    <p>{profileInfo.empId}</p>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                    <div className="col-md-2 col-sm-12 d-flex justify-content-center align-items-center p-3">
-                        <button
-                            className="btn btn-outline-dark rounded-pill btn-sm"
-                            onClick={editProfile ? handleSave : () => setEditProfile(true)}
-                        >
-                            {editProfile ? 'Save' : 'Edit'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-             {/* Personal Information Section */}
-      <div className="card bg-white mt-3 profile-card">
-        <div className="d-flex justify-content-between p-3">
-          <h5>Personal Information</h5>
-        </div>
-        <div className="p-3">
-          {editProfile ? (
-            <div className="form-group">
-              <label>Email:</label>
-              <input
-                type="email"
-                name="email"
-                className="form-control"
-                value={profileInfo.email}
-                onChange={handleProfileInfoChange}
-              />
-              <label className="mt-2">Phone:</label>
-              <input
-                type="text"
+                                    value={formData.empId}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        {/* Professional Information */}
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Designation</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="designation"
+                                    value={formData.designation}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Department</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="department"
+                                    value={formData.department}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label>Educational Background</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    name="educationalBackground"
+                                    value={formData.educationalBackground}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        {/* Contact Information */}
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Email*</Form.Label>
+                                <Form.Control
+                                    required
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>Phone</Form.Label>
+                                <Form.Control
+                                    type="tel"
                 name="phone"
-                className="form-control"
-                value={profileInfo.phone}
-                onChange={handleProfileInfoChange}
-              />
-              <label className="mt-2">Location:</label>
-              <input
-                type="text"
+                                    value={formData.phone}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={12}>
+                            <Form.Group>
+                                <Form.Label>Address</Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    rows={3}
                 name="address"
-                className="form-control"
-                value={profileInfo.address}
-                onChange={handleProfileInfoChange}
-              />
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                            <Form.Group>
+                                <Form.Label>LinkedIn Profile</Form.Label>
+                                <Form.Control
+                                    type="url"
+                                    name="linkedinProfile"
+                                    value={formData.linkedinProfile}
+                                    onChange={handleInputChange}
+                                    placeholder="https://www.linkedin.com/in/your-profile"
+                                />
+                                <Form.Text className="text-muted">
+                                    Enter your full LinkedIn profile URL
+                                </Form.Text>
+                            </Form.Group>
+                        </Col>
+
+                        {/* Resume Upload Section */}
+                        <Col md={12}>
+                            <Form.Group className="mb-4">
+                                <Form.Label>
+                                    <strong>Resume/CV</strong>
+                                </Form.Label>
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="position-relative">
+                                        <label className="btn btn-outline-primary d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+                                            <FaFileUpload />
+                                            Upload Resume
+                                            <input
+                                                type="file"
+                                                className="d-none"
+                                                accept=".pdf,.doc,.docx"
+                                                onChange={handleResumeUpload}
+                                            />
+                                        </label>
+                                    </div>
+                                    {currentUser?.data?.resume && (
+                                        <span className="text-success">
+                                            Resume uploaded: {currentUser.data.resume.split('/').pop()}
+                                        </span>
+                                    )}
+                                </div>
+                                <Form.Text className="text-muted">
+                                    Upload your resume in PDF, DOC, or DOCX format
+                                </Form.Text>
+                            </Form.Group>
+                        </Col>
+
+                        {/* Submit Button */}
+                        <Col md={12} className="text-center mt-4">
+                            <Button 
+                                type="submit" 
+                                variant="primary" 
+                                size="lg" 
+                                disabled={loading}
+                                className="px-5"
+                            >
+                                {loading ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </Col>
+                    </Row>
+                </Form>
             </div>
-          ) : (
-            <ul className="list-unstyled">
-              <li><i className="bi bi-envelope"></i> {profileInfo.email}</li>
-              <li><i className="bi bi-phone"></i> {profileInfo.phone || 'Add your mobile number'}</li>
-              <li><i className="bi bi-geo-alt"></i> {profileInfo.address}</li>
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Resume Section */}
-      <div className="card bg-white mt-3 profile-card">
-        <div className="d-flex justify-content-between p-3">
-          <h5>My Resume</h5>
-          <label htmlFor="resumeUpload" className="btn btn-outline-dark rounded-pill btn-sm">
-            {resume ? 'Change Resume' : 'Add Resume'}
-          </label>
-          <input
-            type="file"
-            id="resumeUpload"
-            className="d-none"
-            onChange={handleResumeChange}
-          />
-        </div>
-        <div className="p-3">
-          {resume ? (
-            <p>{resume.name}</p>
-          ) : (
-            <p>Add your resume here</p>
-          )}
-        </div>
-        <button 
-            className='btn btn-outline-dark rounded-pill btn-sm ms-2'
-            onClick={handleResumeUpload}
-        >
-            {resume ? 'Upload Resume': 'select and Upload'}
-        </button>    
-      </div>
-            {/* Modal for Image Upload */}
-            <Modal show={showModal} onHide={() => setShowModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Upload Profile Image</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <input
-                        type="file"
-                        accept="image/jpeg, image/png"
-                        onChange={handleImageChange}
-                    />
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </div>
-
+        </Container>
     );
 }
 

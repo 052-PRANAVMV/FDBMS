@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import '../styles/Publications.css';
 import { useSelector } from 'react-redux';
+import { MdPictureAsPdf } from 'react-icons/md';
+import { Button } from 'react-bootstrap';
 
 function DisplayPublications() {
     const { currentUser } = useSelector(state => state.user);
@@ -29,6 +31,10 @@ function DisplayPublications() {
         setFilteredPublications(filtered);
     };
 
+    const handleViewPDF = (fileId) => {
+        window.open(`/uploads/${fileId}`, '_blank');
+    };
+
     return (
         <div className="App">
             <h1>Publications</h1>
@@ -43,15 +49,20 @@ function DisplayPublications() {
             <div className="publications">
                 {filteredPublications.map((pub) => (
                     <div className="publication" key={pub._id}>
-                        <div className="image" id={`image${pub.fileId}`}>
-                            <img src={`/uploads/${pub.fileId}`} alt={pub.title} />
-                        </div>
                         <div className="description">
                             <p><strong>{pub.title}</strong></p>
                             <p><strong>{pub.category}</strong></p>
                             <p><strong>{pub.type}</strong></p>
                             <p>{pub.date}</p>
                             <p>{pub.description}</p>
+                            <Button 
+                                variant="outline-primary" 
+                                onClick={() => handleViewPDF(pub.fileId)}
+                                className="view-pdf-btn"
+                                style={{width: '200px', marginBottom: '10px'}}
+                            >
+                                <MdPictureAsPdf /> View PDF
+                            </Button>
                         </div>
                     </div>
                 ))}

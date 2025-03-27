@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Container, Form, Button, Alert } from 'react-bootstrap';
 import '../styles/CertificateUpload.css';
-import { useSelector } from 'react-redux';
+import { useSelector,useDispatch} from 'react-redux';
+import { signInSuccess } from "../redux/user/userSlice";
 
 const CertificateUploadForm = () => {
     const {currentUser} = useSelector(state => state.user)
+    const dispatch = useDispatch();
     const [formValues, setFormValues] = useState({
         nameofcer: '',
         Describecertificate: '',
@@ -47,6 +49,7 @@ const CertificateUploadForm = () => {
             });
 
             if (response.status === 200) {
+                dispatch(signInSuccess(response));
                 setStatus({ loading: false, success: true, error: null });
             }
         } catch (error) {

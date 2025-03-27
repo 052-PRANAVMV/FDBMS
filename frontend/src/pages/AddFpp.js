@@ -83,7 +83,7 @@ function AddFPP() {
               type="text"
               id="title"
               name="title"
-              placeholder="Title of the publication"
+              placeholder="Title of the FPP"
               value={formData.title}
               onChange={handleInputChange}
               required

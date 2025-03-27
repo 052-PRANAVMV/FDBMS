@@ -12,6 +12,7 @@ function AddPublication() {
     title: '',
     category: '',
     type: '', 
+    otherType: '',
     date: '', 
     description: '', 
     file: null 
@@ -37,35 +38,48 @@ function AddPublication() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate type
+    if (formData.type === 'Others' && !formData.otherType) {
+        alert('Please specify the publication type');
+        return;
+    }
+
     const data = new FormData();
     data.append('empId', currentUser.data.empId);
     data.append('title', formData.title);
     data.append('category', formData.category);
-    data.append('type', formData.type);
+    
+    // Use the selected type or custom type
+    const publicationType = formData.type === 'Others' ? formData.otherType : formData.type;
+    data.append('type', publicationType);
+    
     data.append('date', formData.date);
     data.append('description', formData.description);
     data.append('file', formData.file);
 
     try {
-      const response = await axios.post(`/api/faculty/add-publication`, data);
-      if (response.status === 200) {
-        alert('Publication added successfully');
-        dispatch(signInSuccess(response));
-        setFormData({
-         
-          title: '',
-          category: '',
-          type: '', 
-          date: '', 
-          description: '', 
-          file: null 
+        const response = await axios.post(`/api/faculty/add-publication`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
         });
-      } else {
-        alert('Failed to add publication');
-      }
+        
+        if (response.status === 200) {
+            alert('Publication added successfully');
+            dispatch(signInSuccess(response));
+            setFormData({
+                title: '',
+                category: '',
+                type: '', 
+                otherType: '',
+                date: '', 
+                description: '', 
+                file: null 
+            });
+        }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to add publication');
+        console.error('Error:', error);
+        alert(error.response?.data?.message || 'Failed to add publication');
     }
   };
 
@@ -104,16 +118,36 @@ function AddPublication() {
 
           <div className="type">
             <label htmlFor="type">Type:</label>
-            <input
-              type="text"
+            <select
               id="type"
               name="type"
-              placeholder="Type of the publication"
               value={formData.type}
               onChange={handleInputChange}
               required
-            />
-          </div> <br/>
+              className="form-select"
+            >
+              <option value="">Select Publication Type</option>
+              <option value="Research Paper">Research Paper</option>
+              <option value="Journal">Journal</option>
+              <option value="Conference Paper">Conference Paper</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+
+          {formData.type === 'Others' && (
+            <div className="other-type">
+              <label htmlFor="otherType">Specify Type:</label>
+              <input
+                type="text"
+                id="otherType"
+                name="otherType"
+                placeholder="Enter publication type"
+                value={formData.otherType}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          )} <br/>
 
           <div className="date">
             <label htmlFor="date">Date:</label>

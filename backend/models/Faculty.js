@@ -33,10 +33,13 @@ const internshipSchema = new Schema({
 
 const publicationSchema = new Schema({
   title: String,
-  type: { type: String, enum: ['Research Paper', 'Journal', 'Conference Paper'] },
-  category : String,
+  type: { 
+    type: String, 
+    required: true
+  },
+  category: String,
   date: Date,
-  description : String,
+  description: String,
   fileId: String
 });
 
@@ -126,6 +129,7 @@ const facultySchema = new Schema({
     educationalBackground: String,
     photoId: String ,
     resume: String,
+    linkedinProfile: String,
   subjectsHandled: [subjectSchema],
   certifications: [certificationSchema],
   internships: [internshipSchema],

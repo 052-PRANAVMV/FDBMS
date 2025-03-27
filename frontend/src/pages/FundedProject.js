@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import '../styles/fundedProject.css';  // Rename App.css to FundedProjects.css
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdPictureAsPdf } from 'react-icons/md';
 import axios from 'axios';
 import { signInSuccess } from '../redux/user/userSlice';
-import { Alert } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 
 function FundedProjects() {
   const navigate = useNavigate();
@@ -40,6 +40,10 @@ function FundedProjects() {
     }
   };
 
+  const handleViewPDF = (fileId) => {
+    window.open(`/uploads/${fileId}`, '_blank');
+  };
+
   return (
     <div className="FundedProjects">
       <h1>Projects</h1>
@@ -51,14 +55,19 @@ function FundedProjects() {
       <div className="projects">
         {projects.map((project) => (
           <div className="project" key={project._id}>
-            <div className="image" id={`image${project.fileId}`}>
-              <img src={`/uploads/${project.fileId}`} alt={project.title} />
-            </div>
             <div className="details">
               <p><strong>{project.title}</strong></p>
               <p>{project.status}</p>
               <p>Date Submitted: {project.dateSubmitted}</p>
               <p>{project.description}</p>
+              <Button 
+                variant="outline-primary" 
+                onClick={() => handleViewPDF(project.fileId)}
+                className="view-pdf-btn"
+                style={{width: '200px', marginBottom: '10px'}}
+              >
+                <MdPictureAsPdf /> View PDF
+              </Button>
               <button className="custom-button" onClick={() => handleDelete(project._id)}>
                 <MdDelete />
               </button>

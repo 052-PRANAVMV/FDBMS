@@ -44,7 +44,7 @@ function AddEvents() {
       <Container>
         <Row className='text-center'>
           <Col>
-            <h1>EVENTS ORGANIZED BY VCET</h1>
+            <h1>EVENTS ORGANIZED BY {currentUser.data.name}</h1>
             <hr />
           </Col>
         </Row>
