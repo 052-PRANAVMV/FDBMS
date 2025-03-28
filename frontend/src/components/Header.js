@@ -28,8 +28,8 @@ const Header = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="p-3">
-      <Container>
+    <Navbar bg="dark" variant="dark" expand="lg" className="p-3 w-100">
+      <Container className='w-100'>
         <Navbar.Brand as={Link} to="/">
           <img src={logo} alt='logo' className='logo'/>
         </Navbar.Brand>
@@ -65,9 +65,10 @@ const Header = () => {
           <div className="text-end">
             {currentUser ? (
               <DropdownButton 
+              className="me-2 custom-button btn-sm" 
                 id="dropdown-button" 
                 title="Sign-Out" 
-                style={{ padding: '5px 10px', fontSize: '12px', width: '150px' }}
+                style={{ padding: '2px 5px', fontSize: '10px', width: 'auto' }}
               >
                 <Dropdown.Item as={Link} to="/dashboard">Profile</Dropdown.Item>
                 <Dropdown.Item as={Link} to="/">Sign-Out</Dropdown.Item>
@@ -76,14 +77,14 @@ const Header = () => {
               <div>
                 <Button 
                   variant="outline-light" 
-                  className="me-2 custom-button" 
+                  className="me-2 custom-button btn-sm" 
                   onClick={handleGetStartClick}
                 >
                   Login
                 </Button>
                 <Button 
                   variant="warning" 
-                  className="custom-button" 
+                  className="custom-button btn-sm" 
                   onClick={handleSignup}
                 >
                   Sign-up
